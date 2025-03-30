@@ -1,0 +1,30 @@
+services:
+  test_mm:
+    image: mattermost/mattermost-preview
+    container_name: test_mm
+    ports:
+      - "8065:8065"
+    environment:
+      MM_SERVICESETTINGS_ENABLELOCALMODE: "true"
+
+  tarantool:
+    image: tarantool/tarantool
+    container_name: tarantool
+    ports:
+      - "3301:3301"
+    volumes:
+      - ./init.lua:/opt/tarantool/init.lua
+    command: [ "tarantool", "/opt/tarantool/init.lua" ]
+
+  bot:
+    build: .
+    container_name: mattermost-voting-bot
+    env_file:
+      - .env
+    depends_on:
+      - tarantool
+    environment:
+      - TARANTOOL_HOST=tarantool
+      - TARANTOOL_PORT=3301
+    ports:
+      - "8090:8080"
